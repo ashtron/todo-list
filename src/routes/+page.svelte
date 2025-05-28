@@ -67,26 +67,10 @@
 			todos = todos.filter((t) => t.id !== id);
 		}
 	}
-
-	async function writeTestTodo() {
-		const { data, error } = await supabase.from('todos').insert([
-			{
-				text: '🔥 Test task from UI',
-				completed: false
-			}
-		]);
-
-		if (error) {
-			console.error('Error writing test todo:', error);
-		} else {
-			console.log('✅ Test todo added:', data);
-		}
-	}
 </script>
 
 <main class="container">
 	<h1>📝 Todo List</h1>
-  <button on:click={writeTestTodo}>Write test todo</button>
 
 	<form on:submit|preventDefault={addTask}>
 		<input type="text" bind:value={newTask} placeholder="Add a new task..." />
