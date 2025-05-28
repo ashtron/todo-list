@@ -1,43 +1,115 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { supabase } from '$lib/supabaseClient';
+
+	type Todo = {
+		id: string;
+		text: string;
+		completed: boolean;
+		created_at: string;
+	};
+
 	let newTask = '';
-	let tasks: { text: string; completed: boolean }[] = [];
+	let todos: Todo[] = [];
+	let loading = true;
 
-	function addTask() {
+	// Fetch tasks from Supabase
+	onMount(async () => {
+		const { data, error } = await supabase
+			.from('todos')
+			.select('*')
+			.order('created_at', { ascending: true });
+		if (error) {
+			console.error('Error fetching todos:', error);
+		} else {
+			todos = data as Todo[];
+		}
+		loading = false;
+	});
+
+	// Add a new task
+	async function addTask() {
 		if (!newTask.trim()) return;
-		tasks = [...tasks, { text: newTask, completed: false }];
-		newTask = '';
+		const { data, error } = await supabase
+			.from('todos')
+			.insert([{ text: newTask, completed: false }])
+			.select();
+
+		if (error) {
+			console.error('Error adding task:', error);
+		} else if (data) {
+			todos = [...todos, data[0] as Todo];
+			newTask = '';
+		}
 	}
 
-	function toggleTask(index: number) {
-		tasks[index].completed = !tasks[index].completed;
-		tasks = [...tasks];
+	// Toggle completion
+	async function toggleTask(todo: Todo) {
+		const { data, error } = await supabase
+			.from('todos')
+			.update({ completed: !todo.completed })
+			.eq('id', todo.id)
+			.select();
+
+		if (error) {
+			console.error('Error toggling task:', error);
+		} else if (data) {
+			todos = todos.map((t) => (t.id === todo.id ? data[0] : t));
+		}
 	}
 
-	function deleteTask(index: number) {
-		tasks.splice(index, 1);
-		tasks = [...tasks];
+	// Delete task
+	async function deleteTask(id: string) {
+		const { error } = await supabase.from('todos').delete().eq('id', id);
+		if (error) {
+			console.error('Error deleting task:', error);
+		} else {
+			todos = todos.filter((t) => t.id !== id);
+		}
+	}
+
+	async function writeTestTodo() {
+		const { data, error } = await supabase.from('todos').insert([
+			{
+				text: '🔥 Test task from UI',
+				completed: false
+			}
+		]);
+
+		if (error) {
+			console.error('Error writing test todo:', error);
+		} else {
+			console.log('✅ Test todo added:', data);
+		}
 	}
 </script>
 
 <main class="container">
 	<h1>📝 Todo List</h1>
+  <button on:click={writeTestTodo}>Write test todo</button>
 
 	<form on:submit|preventDefault={addTask}>
 		<input type="text" bind:value={newTask} placeholder="Add a new task..." />
 		<button type="submit">Add</button>
 	</form>
 
-	<ul>
-		{#each tasks as task, i}
-			<li>
-				<label>
-					<input type="checkbox" checked={task.completed} on:change={() => toggleTask(i)} />
-					<span class:line-through={task.completed}>{task.text}</span>
-				</label>
-				<button on:click={() => deleteTask(i)}>❌</button>
-			</li>
-		{/each}
-	</ul>
+	{#if loading}
+		<p>Loading tasks...</p>
+	{:else if todos.length === 0}
+		<p>No tasks yet!</p>
+	{:else}
+		<ul>
+			{#each todos as todo}
+				<li>
+					<label>
+						<input type="checkbox" checked={todo.completed} on:change={() => toggleTask(todo)} />
+						<span class:line-through={todo.completed}>{todo.text}</span>
+					</label>
+					<button on:click={() => deleteTask(todo.id)}>❌</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 </main>
 
 <style>
