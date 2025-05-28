@@ -30,6 +30,7 @@
 	// Add a new task
 	async function addTask() {
 		if (!newTask.trim()) return;
+
 		const { data, error } = await supabase
 			.from('todos')
 			.insert([{ text: newTask, completed: false }])
@@ -37,8 +38,8 @@
 
 		if (error) {
 			console.error('Error adding task:', error);
-		} else if (data) {
-			todos = [...todos, data[0] as Todo];
+		} else if (data && data.length > 0) {
+			todos = [...todos, data[0]];
 			newTask = '';
 		}
 	}
