@@ -70,7 +70,7 @@
 	}
 </script>
 
-<main class="container">
+<main class="todo-wrapper">
 	<h1>📝 Todo List</h1>
 
 	<form on:submit|preventDefault={addTask}>
@@ -98,16 +98,47 @@
 </main>
 
 <style>
+	.todo-wrapper {
+		max-width: 400px;
+		margin: 10vh auto 0 auto;
+		padding: 1rem;
+		background: var(--pico-background-color);
+		border-radius: 1rem;
+
+		/* Right-side-only drop shadow */
+		box-shadow: 8px 0 20px rgba(0, 0, 0, 0.2);
+	}
+
+	form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	form input[type='text'] {
+		width: 100%;
+	}
+  
+	form button {
+		width: 100%;
+		display: inline-block;
+		text-align: center;
+		margin: 0; /* Reset any weird horizontal alignment */
+	}
+
 	ul {
 		list-style: none;
 		padding-left: 0;
+		margin-top: 1rem;
 	}
 
 	li {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 0.25rem 0;
+		padding: 0.5rem 0;
+		border-bottom: 1px solid var(--pico-muted-border-color);
 	}
 
 	.line-through {
